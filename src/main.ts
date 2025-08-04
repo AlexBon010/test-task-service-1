@@ -21,6 +21,11 @@ async function bootstrap() {
   const kafkaHost = configService.get<string>('KAFKA_HOST')!
   const kafkaPort = configService.get<number>('KAFKA_PORT_EXTERNAL')!
 
+  app.enableCors({
+    origin: '*',
+
+  })
+
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,
     options: {
@@ -33,14 +38,18 @@ async function bootstrap() {
   app.setGlobalPrefix('api')
 
   app.use(json())
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
       transformOptions: {
-        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
       },
     }),
   )
+
   app.useGlobalInterceptors(
     new ClassSerializerInterceptor(app.get(Reflector), {
       excludeExtraneousValues: true,

@@ -13,7 +13,7 @@ import { UploadFileResponseDto } from '../dto/uploadFileResponse.dto';
 @Controller('files')
 export class FilesProcessingController {
     constructor(
-        private readonly filesProcessingService: FilesProcessingService
+        private readonly filesProcessingService: FilesProcessingService,
     ) { }
 
     @ApiOperation({
@@ -55,8 +55,8 @@ export class FilesProcessingController {
         }
     })
     @UseInterceptors(FileInterceptor('file'))
-    async uploadFile(@UploadedFile() file: Express.Multer.File) {
-        const id = this.filesProcessingService.parseAndSaveFile(file);
+    uploadFile(@UploadedFile() file: Express.Multer.File) {
+        // const id = this.filesProcessingService.parseAndSaveFile(file);
         // return { id };
     }
 }

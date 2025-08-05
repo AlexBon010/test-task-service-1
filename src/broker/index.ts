@@ -1,2 +1,2 @@
-export * from './broker.module'
-export * from './broker.service'
+export * from './logs/logs.module'
+export { LoggerMiddleware } from './logs/middleware/logger.middleware'

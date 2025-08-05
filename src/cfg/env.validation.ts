@@ -38,17 +38,17 @@ class EnvironmentVariables {
     @IsNumber()
     MONGODB_PORT_INTERNAL: number
 
-    @IsNotEmpty()
-    @IsString()
-    MONGO_INITDB_ROOT_USERNAME: string
+    // @IsNotEmpty()
+    // @IsString()
+    // MONGO_INITDB_ROOT_USERNAME: string
 
-    @IsNotEmpty()
-    @IsString()
-    MONGO_INITDB_ROOT_PASSWORD: string
+    // @IsNotEmpty()
+    // @IsString()
+    // MONGO_INITDB_ROOT_PASSWORD: string
 
-    @IsNotEmpty()
-    @IsString()
-    MONGO_HOST: string
+    // @IsNotEmpty()
+    // @IsString()
+    // MONGO_HOST: string
 
     @IsNotEmpty()
     @IsNumber()

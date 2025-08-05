@@ -4,7 +4,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { FilesProcessingService } from './files-processing.service';
 import { GetInFileRequestDto } from '../dto/getInFileRequest.dto';
-import { FileDownloadResponseDto } from '../dto/getInFileResponse.dto';
+import { Writable } from 'node:stream';
 
 
 @ApiTags('Files processing')
@@ -21,13 +21,12 @@ export class FilesProcessingController {
     @ApiResponse({
         status: 200,
         description: 'File download successful',
-        type: FileDownloadResponseDto
     })
     @Get('getDataInFile')
     async getInFile(
         @Query() query: GetInFileRequestDto,
         @Res() res: Response
-    ) {
+    ): Promise<Writable> {
         const { url, fileName } = query;
 
         const fileData = await this.filesProcessingService.getInFile({ url });

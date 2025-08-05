@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsOptional, IsString, IsUrl, Matches } from 'class-validator';
 
 export class GetInFileRequestDto {
     @ApiProperty({
@@ -10,12 +10,9 @@ export class GetInFileRequestDto {
     @IsUrl()
     url: string;
 
-    @ApiProperty({
-        description: 'Custom filename for the downloaded file',
-        example: 'data-export.json',
-        required: false
-    })
+    @ApiProperty({ description: 'Custom filename for the downloaded file (supported formats: .json, .xlsx, .xls)', example: 'data-export.json', required: false })
     @IsOptional()
     @IsString()
+    @Matches(/\.(json|xlsx|xls)$/, { message: 'File extension must be one of: .json, .xlsx, .xls' })
     fileName?: string;
 }

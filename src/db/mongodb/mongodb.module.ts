@@ -16,7 +16,6 @@ import { UploadedFileService } from './services/uploaded-file.service'
                 const port = configService.get<number>('MONGODB_PORT_EXTERNAL')!
 
                 const uri = `mongodb://${username}:${password}@${host}:${port}`
-                console.log(uri)
                 return {
                     uri: `mongodb://localhost:27017`,
                     autoIndex: configService.get<string>('APP_MODE') === 'development',

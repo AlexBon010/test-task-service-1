@@ -77,7 +77,6 @@ async function bootstrap() {
     app.startAllMicroservices(),
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`)
-      console.log('Kafka consumer is running')
     })
   ])
 

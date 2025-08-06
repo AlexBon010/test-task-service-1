@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { RedisModule } from '@nestjs-modules/ioredis'
 import { ConfigService } from '@nestjs/config';
+import { ApiEventsService } from './api-events/api-events.service';
+import { MetricsMiddleware } from './api-events/middleware/metrics.middleware';
 
 @Module({
     imports: [
@@ -21,5 +23,7 @@ import { ConfigService } from '@nestjs/config';
             inject: [ConfigService],
         }),
     ],
+    providers: [ApiEventsService, MetricsMiddleware],
+    exports: [ApiEventsService, MetricsMiddleware],
 })
 export class RedistimeseriesModule { }

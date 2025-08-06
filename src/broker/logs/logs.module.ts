@@ -7,7 +7,6 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
 
 @Module({
     imports: [
-
         ClientsModule.registerAsync([
             {
                 name: 'LOGS_SERVICE',

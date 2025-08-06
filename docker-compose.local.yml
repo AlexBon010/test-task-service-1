@@ -41,10 +41,25 @@ services:
             KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
             KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
             KAFKA_NUM_PARTITIONS: 3
+            KAFKA_REST_ACCESS_CONTROL_ALLOW_ORIGIN: '*'
+            KAFKA_REST_ACCESS_CONTROL_ALLOW_METHODS: 'GET,POST,PUT,DELETE'
+            KAFKA_REST_ACCESS_CONTROL_ALLOW_HEADERS: 'origin,content-type,accept,authorization'
         volumes:
             - kafka_data:/var/lib/kafka/data
+    elasticsearch:
+        image: elasticsearch:9.1.0
+        container_name: elasticsearch
+        restart: unless-stopped
+        volumes:
+            - elasticsearch_data:/usr/share/elasticsearch/data
+        environment:
+            discovery.type: single-node
+            xpack.security.enabled: false
+        ports:
+            - '9200:9200'
 
 volumes:
     mongodb_data:
     redis_data:
     kafka_data:
+    elasticsearch_data:

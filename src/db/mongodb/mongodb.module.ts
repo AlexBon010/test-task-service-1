@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 
-import { Task, TaskSchema } from './schemas/task.schema'
-import { TaskService } from './services/task.service'
+import { UploadedFile, UploadedFileSchema } from './schemas/uploaded-file.schema'
+import { UploadedFileService } from './services/uploaded-file.service'
 
 @Module({
     imports: [
@@ -16,19 +16,19 @@ import { TaskService } from './services/task.service'
                 const port = configService.get<number>('MONGODB_PORT_EXTERNAL')!
 
                 const uri = `mongodb://${username}:${password}@${host}:${port}`
-
+                console.log(uri)
                 return {
-                    uri,
+                    uri: `mongodb://localhost:27017`,
                     autoIndex: configService.get<string>('APP_MODE') === 'development',
                 }
             },
             inject: [ConfigService],
         }),
         MongooseModule.forFeature([
-            { name: Task.name, schema: TaskSchema },
+            { name: UploadedFile.name, schema: UploadedFileSchema },
         ]),
     ],
-    providers: [TaskService],
-    exports: [TaskService],
+    providers: [UploadedFileService],
+    exports: [UploadedFileService],
 })
 export class MongodbModule { }

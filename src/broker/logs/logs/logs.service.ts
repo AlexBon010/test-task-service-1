@@ -1,5 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+
 import { ClientKafka } from '@nestjs/microservices';
+import { ILog } from 'src/broker/interfaces/log.interface';
 
 @Injectable()
 export class LogsService implements OnModuleInit {
@@ -11,7 +13,31 @@ export class LogsService implements OnModuleInit {
         await this.client.connect();
     }
 
-    postLogs(data: any) {
-        this.client.emit('logs', data)
+
+    private readonly LOG_TOPIC = 'logs';
+    private readonly SERVICE_NAME = 'task-service-1';
+
+    info(message: string) {
+        this.log('info', message);
+    }
+
+    warn(message: string) {
+        this.log('warn', message);
+    }
+
+    error(message: string) {
+        this.log('error', message);
+    }
+
+
+    private log(level: ILog['level'], message: string) {
+        const logEntry: ILog = {
+            level,
+            message,
+            timestamp: new Date().toISOString(),
+            service: this.SERVICE_NAME,
+        };
+
+        this.client.emit('logs', logEntry)
     }
 }

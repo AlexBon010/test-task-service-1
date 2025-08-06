@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import mongoose from 'mongoose';
 
 @Schema({ timestamps: true })
 export class UploadedFile {
@@ -9,19 +10,22 @@ export class UploadedFile {
     @Prop({ required: true, enum: ['json', 'xlsx', 'xls'] })
     fileType: string;
 
-    @Prop({ required: true, type: [Object], index: 'text' })
-    records: Record<string, any>[];
-
-    @Prop({ required: true })
-    totalRecords: number;
-
-    @Prop({ type: [String], index: true })
-    fields: string[];
+    // @Prop({ type: [String], index: true })
+    // fields: string[];
 }
 
 export type UploadedFileDocument = HydratedDocument<UploadedFile>;
-const schema = SchemaFactory.createForClass(UploadedFile);
+export const UploadedFileSchema = SchemaFactory.createForClass(UploadedFile);
 
-schema.index({ createdAt: -1, _id: -1 });
+@Schema({ timestamps: true })
+export class RecordEntity {
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'UploadedFile', required: true, index: true })
+    uploadedFileId: mongoose.Types.ObjectId;
 
-export const UploadedFileSchema = schema;
+    @Prop({ type: Map, of: mongoose.Schema.Types.Mixed, required: true })
+    data: { type: mongoose.Schema.Types.Mixed };
+}
+
+export type RecordEntityDocument = HydratedDocument<RecordEntity>;
+export const RecordEntitySchema = SchemaFactory.createForClass(RecordEntity);
+

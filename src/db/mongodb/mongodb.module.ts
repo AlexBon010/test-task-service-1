@@ -2,7 +2,12 @@ import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MongooseModule } from '@nestjs/mongoose'
 
-import { UploadedFile, UploadedFileSchema } from './schemas/uploaded-file.schema'
+import {
+    UploadedFile,
+    UploadedFileSchema,
+    RecordEntity,
+    RecordEntitySchema
+} from './schemas/uploaded-file.schema'
 import { UploadedFileService } from './services/uploaded-file.service'
 
 @Module({
@@ -25,6 +30,7 @@ import { UploadedFileService } from './services/uploaded-file.service'
         }),
         MongooseModule.forFeature([
             { name: UploadedFile.name, schema: UploadedFileSchema },
+            { name: RecordEntity.name, schema: RecordEntitySchema },
         ]),
     ],
     providers: [UploadedFileService],

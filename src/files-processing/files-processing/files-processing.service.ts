@@ -1,15 +1,14 @@
 import { HttpService } from '@nestjs/axios';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { pipeline, Readable, ReadableOptions, StreamOptions, Transform, Writable } from 'stream';
+import { pipeline, Readable, Writable } from 'stream';
 import * as XLSX from 'xlsx';
 import { parser } from "stream-json"
 import { streamValues } from 'stream-json/streamers/StreamValues';
-import { chain } from 'stream-chain';
 
 
 import { GetInFileRequestDto } from '../dto/getInFileRequest.dto';
-import { UploadedFileService, UploadedFile } from '@db';
-import { createReadStream } from 'fs';
+import { UploadedFileService } from '@db';
+import { GetDocRequestDto, GetDocResponseDto } from '../dto/get-doc.dto';
 
 @Injectable()
 export class FilesProcessingService {
@@ -27,144 +26,96 @@ export class FilesProcessingService {
         }
     }
 
-    parseAndSaveFile(file: Express.Multer.File) {
+    async parseAndSaveFile(file: Express.Multer.File) {
+
         const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
         if (!fileExtension || !['json', 'xlsx', 'xls'].includes(fileExtension)) {
             throw new BadRequestException('Unsupported file type. Only .json, .xlsx and .xls files are supported');
         }
 
-        const uploadService = this.uploadedFileService
+        const parentId = await this.uploadedFileService.createParentDocument({
+            originalFileName: file.originalname,
+            fileType: fileExtension
+        })
 
-        const writable = new Writable({
-            objectMode: true,
-            async write(chunk, _encoding, callback) {
-                try {
-                    const parsedChunk = JSON.parse(JSON.stringify(chunk)).value
-                    const quantity = Math.ceil(parsedChunk.length / 50000)
-                    const docRef = await uploadService.create({
-                        originalFileName: file.originalname,
-                        fileType: fileExtension,
-                        records: [],
-                        fields: [],
-                        totalRecords: 0,
-                    })
-                    // for (let i = 0; i <= quantity; i++) {
-                    const l = parsedChunk.slice(0 * 50000, (0 + 1) * 50000)
-                    await uploadService.addRecord(docRef, l)
-                    console.log("write", l);
-                    // }
+        if (fileExtension === 'json') {
+            this.parseJson(file, this.uploadedFileService, parentId)
+            return parentId
+        }
 
-                    // await uploadService.create({
-                    //     originalFileName: file.originalname,
-                    //     fileType: fileExtension,
-                    //     records: chunk,
-                    //     fields: Object.keys({}),
-                    //     totalRecords: 0,
-                    // });
+        if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+            this.parseExcel(file, this.uploadedFileService, parentId)
+            return parentId
+        }
 
-                    callback();
-                } catch (err) {
-                    callback(err);
-                }
-            }
-        });
+        return parentId
 
-        return new Promise((resolve, reject) => {
-            pipeline(
-                Readable.from(file.buffer, {
-                    highWaterMark: 1024 * 1024 * 10,
-                }),
-                parser(),
-                streamValues(),
-                writable,
-                (err) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(null);
-                    }
-                }
-            );
-        });
-
-
-
-        // const parsingResult = {
-        //     originalFileName: file.originalname,
-        //     fileType: fileExtension,
-        // } as UploadedFile
-        // parser("sd")
-        // if (fileExtension === 'json') {
-        //     const { records, fields } = await this.parseJson(file.buffer)
-
-        //     parsingResult.records = records
-        //     parsingResult.fields = [...fields]
-        //     parsingResult.totalRecords = records.length
-        // }
-
-        // if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-        //     const { records, fields } = this.parseExcel(file.buffer)
-        //     parsingResult.records = records
-        //     parsingResult.fields = [...fields]
-        //     parsingResult.totalRecords = records.length
-        // }
-
-        // return this.uploadedFileService.create(parsingResult);
     }
 
-    // private async parseJson(buffer: ): Promise<{
-    //     records: Record<string, any>[];
-    //     fields: Set<string>;
-    // }> {
-    //     return new Promise((resolve, reject) => {
-    //         const fields = new Set<string>();
-    //         const records: Record<string, any>[] = [];
+    async getDoc(filters: GetDocRequestDto & { parentId: string }): Promise<GetDocResponseDto[]> {
+        try {
+            return await this.uploadedFileService.getRecordsByParentId(filters)
+        } catch (err) {
+            throw new BadRequestException(`Failed to get documents: ${err.message}`);
+        }
+    }
 
-    //         const readable = new Readable(buffer);
 
-    //         let accumulatedData = '';
+    private parseJson(file: Express.Multer.File, uploadService: UploadedFileService, parentId: string) {
+        try {
+            const writable = new Writable({
+                objectMode: true,
+                write(chunk, _encoding, callback) {
+                    try {
+                        const parsedChunk = JSON.parse(JSON.stringify(chunk)).value
+                        void uploadService.createRecordsBatch(parentId, parsedChunk)
+                        callback();
+                    } catch (err) {
+                        callback(err);
+                    }
+                }
+            });
 
-    //         readable.on('data', (chunk) => {
-    //             accumulatedData += chunk.toString();
-    //         });
+            const streamsPromise = async () => await new Promise((resolve, reject) => {
+                pipeline(
+                    Readable.from(file.buffer, {
+                        highWaterMark: 1024 * 1024 * 10,
+                    }),
+                    parser(),
+                    streamValues(),
+                    writable,
+                    (err) => {
+                        if (err) {
+                            reject(err);
+                        }
+                        resolve(null);
+                    }
+                );
+            });
+            void streamsPromise()
+        } catch (err) {
+            throw new BadRequestException(`Failed to parse JSON file: ${err.message}`);
+        }
+    }
 
-    //         readable.on('end', () => {
-    //             try {
-    //                 const parsed = JSON.parse(accumulatedData);
+    private parseExcel(
+        file: Express.Multer.File,
+        uploadService: UploadedFileService,
+        parentId: string
+    ) {
+        try {
+            const workbook = XLSX.read(file.buffer, { type: "buffer" });
 
-    //                 parsed.forEach(obj => {
-    //                     records.push(obj);
-    //                     Object.keys(obj).forEach(k => fields.add(k));
-    //                 });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
 
-    //                 resolve({ records, fields });
-    //             } catch (error) {
-    //                 if (error instanceof BadRequestException) {
-    //                     reject(error);
-    //                 } else {
-    //                     reject(new BadRequestException('Failed to parse JSON'));
-    //                 }
-    //             }
-    //         });
-
-    //         readable.on('error', (error) => {
-    //             reject(new BadRequestException('Stream error while parsing JSON'));
-    //         });
-    //     });
-    // }
-
-    // private parseExcel(buffer: Buffer): { records: Record<string, any>[]; fields: Set<string> } {
-    //     const workbook = XLSX.read(buffer, { type: 'buffer' });
-    //     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    //     const records = XLSX.utils.sheet_to_json(sheet);
-
-    //     if (!Array.isArray(records) || records.length === 0) {
-    //         throw new BadRequestException('Excel file contains no valid records');
-    //     }
-
-    //     const fields = new Set<string>();
-    //     records.forEach(obj => Object.keys(obj).forEach(k => fields.add(k)));
-
-    //     return { records, fields };
-    // }
+            const records: Record<string, unknown>[] = XLSX.utils.sheet_to_json(worksheet, {
+                defval: null,
+                raw: false
+            });
+            void uploadService.createRecordsBatch(parentId, records);
+        } catch (err) {
+            throw new BadRequestException(`Failed to parse Excel file: ${err.message}`);
+        }
+    }
 }

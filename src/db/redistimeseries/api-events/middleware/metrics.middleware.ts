@@ -4,29 +4,26 @@ import { ApiEventsService } from '../api-events.service';
 
 @Injectable()
 export class MetricsMiddleware implements NestMiddleware {
-    constructor(private readonly apiEventsService: ApiEventsService) { }
+    constructor(private readonly metrics: ApiEventsService) { }
 
-    use(req: Request, res: Response, next: NextFunction) {
-        const { method, originalUrl } = req;
-        const startTime = Date.now();
+    use(req: Request, res: Response, next: NextFunction): void {
+        const start = Date.now();
 
         res.on('finish', () => {
-            const responseTime = Date.now() - startTime;
-            const status = res.statusCode;
-            const message = `${method} ${originalUrl} - ${status} (${responseTime}ms)`;
+            const duration = Date.now() - start;
+            const { method, originalUrl } = req;
+            const statusCode = res.statusCode;
 
-            if (status >= 500) {
-                this.apiEventsService.log('error', message);
-                next();
+            const preparedUrl = originalUrl.split('?')[0]
+
+            void this.metrics.recordResponseTime(preparedUrl, method, duration)
+
+            if (statusCode >= 500) {
+                void this.metrics.recordError(preparedUrl, method)
             }
 
-            if (status >= 400) {
-                this.apiEventsService.log('warn', message);
-                next();
-            }
-
-            this.apiEventsService.log('info', message);
-            next();
+            const isSuccess = statusCode < 400;
+            void this.metrics.recordSuccessRate(preparedUrl, method, isSuccess ? 100 : 0)
         });
 
         next();

@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 import { LogsService } from './logs/logs.service';
-import { LogRepository } from '../repositories/log.repository';
 import { ConfigService } from '@nestjs/config';
 import { LoggerMiddleware } from './middleware/logger.middleware';
 
@@ -22,13 +21,17 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
                         },
                         producer: {
                             allowAutoTopicCreation: true,
+                            idempotent: false,
+                            maxInFlightRequests: 1,
+                            retries: 0,
+                            acks: 0,
                         },
                     },
                 }),
             },
         ]),
     ],
-    providers: [LogsService, LogRepository, LoggerMiddleware],
-    exports: [LoggerMiddleware, LogRepository],
+    providers: [LogsService, LoggerMiddleware],
+    exports: [LoggerMiddleware, LogsService],
 })
 export class LogsModule { }

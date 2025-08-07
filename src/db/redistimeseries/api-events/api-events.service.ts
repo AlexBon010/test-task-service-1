@@ -11,7 +11,6 @@ export class ApiEventsService {
 
     async recordResponseTime(endpoint: string, method: string, value: number, timestamp = Date.now()) {
         const key = `metrics:${method}:${endpoint}:response_time`;
-        console.log(key)
         await this.addPoint(key, timestamp, value, {
             endpoint,
             method,

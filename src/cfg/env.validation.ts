@@ -1,22 +1,12 @@
 import { plainToInstance } from 'class-transformer'
 import {
-    IsEnum,
     IsNotEmpty,
     IsNumber,
     IsString,
     validateSync,
 } from 'class-validator'
 
-enum AppMode {
-    DEVELOPMENT = 'development',
-    PRODUCTION = 'production',
-}
-
 class EnvironmentVariables {
-    @IsNotEmpty()
-    @IsEnum(AppMode)
-    APP_MODE: string
-
     @IsNotEmpty()
     @IsNumber()
     APP_PORT: number

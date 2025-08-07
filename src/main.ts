@@ -16,7 +16,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService)
 
   const port = configService.get<number>('APP_PORT')!
-  const isDev = configService.get<string>('APP_MODE') === 'development'
 
   const kafkaHost = configService.get<string>('KAFKA_HOST')!
   const kafkaPort = configService.get<number>('KAFKA_PORT')!
@@ -56,16 +55,15 @@ async function bootstrap() {
   )
 
 
-  if (isDev) {
-    const config = new DocumentBuilder()
-      .setTitle('Service A api')
-      .setDescription('API description')
-      .setVersion('1.0')
-      .build()
+  const config = new DocumentBuilder()
+    .setTitle('Service A api')
+    .setDescription('API description')
+    .setVersion('1.0')
+    .build()
 
-    const documentFactory = () => SwaggerModule.createDocument(app, config)
-    SwaggerModule.setup('api', app, documentFactory)
-  }
+  const documentFactory = () => SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('api', app, documentFactory)
+
 
   await Promise.all([
     app.startAllMicroservices(),

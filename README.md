@@ -1,60 +1,30 @@
 ## 🚀 Quick Start
 
-Create `.env` or `.env.development` and `.env.local` files in the project root with the following
-variables:
-
-```env.local
-MONGODB_PORT=27017
-
-REDIS_PORT=6379
-
-KAFKA_PORT=9092
-KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
-KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
-KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
-KAFKA_NODE_ID=1
-KAFKA_PROCESS_ROLES=broker,controller
-KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE='true'
-KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
-KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
-KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
-KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
-KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
-KAFKA_NUM_PARTITIONS=3
-KAFKA_REST_ACCESS_CONTROL_ALLOW_ORIGIN='*'
-KAFKA_REST_ACCESS_CONTROL_ALLOW_METHODS='GET,POST,PUT,DELETE'
-KAFKA_REST_ACCESS_CONTROL_ALLOW_HEADERS='origin,content-type,accept,authorization'
-
-ELASTICSEARCH_PORT=9200
-```
+Create `.env` file in the project root with the following variables:
 
 ```env
-APP_MODE=development
 APP_PORT=3000
 
 MONGODB_PORT=27017
-MONGODB_HOST=localhost
+MONGODB_HOST=mongodb
 
 REDIS_PORT=6379
-REDIS_HOST=localhost
+REDIS_HOST=redis-timeseries
 
 KAFKA_PORT=9092
-KAFKA_HOST=localhost
+KAFKA_HOST=kafka
 KAFKA_LOGS_CLIENT=logs-producer
 ```
 
-Execute (in the project root):
+Move the docker-compose directory one level up (to be at the same level as test-task-service-1 and
+test-task-service-2)
 
-```bash
-docker-compose --env-file .\.env.local  up --build -d
-```
+├── test-task-service-1 ├── test-task-service-2 └── docker-compose
 
 Start the project:
 
 ```bash
-npm ci
-npm run start:dev
+docker-compose up --build -d
 ```
 
-Hint: API docs available at GET /api
+Hint: API docs available at GET localhost:3000/api

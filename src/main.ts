@@ -13,20 +13,16 @@ import { AppModule } from './app.module'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-
-
-
   const configService = app.get(ConfigService)
 
   const port = configService.get<number>('APP_PORT')!
   const isDev = configService.get<string>('APP_MODE') === 'development'
 
   const kafkaHost = configService.get<string>('KAFKA_HOST')!
-  const kafkaPort = configService.get<number>('KAFKA_PORT_EXTERNAL')!
+  const kafkaPort = configService.get<number>('KAFKA_PORT')!
 
   app.enableCors({
     origin: '*',
-
   })
 
   app.connectMicroservice<MicroserviceOptions>({
@@ -71,8 +67,6 @@ async function bootstrap() {
     SwaggerModule.setup('api', app, documentFactory)
   }
 
-
-
   await Promise.all([
     app.startAllMicroservices(),
     app.listen(port, () => {
@@ -81,4 +75,4 @@ async function bootstrap() {
   ])
 
 }
-bootstrap()
+void bootstrap()

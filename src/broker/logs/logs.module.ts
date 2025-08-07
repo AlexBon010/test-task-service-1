@@ -15,8 +15,8 @@ import { LoggerMiddleware } from './middleware/logger.middleware';
                     transport: Transport.KAFKA,
                     options: {
                         client: {
-                            clientId: 'logs-producer',
-                            brokers: [`${configService.get<string>('KAFKA_HOST')}:${configService.get<number>('KAFKA_PORT_EXTERNAL')}`],
+                            clientId: configService.get<string>('KAFKA_LOGS_CLIENT'),
+                            brokers: [`${configService.get<string>('KAFKA_HOST')}:${configService.get<number>('KAFKA_PORT')}`],
                         },
                         producer: {
                             allowAutoTopicCreation: true,

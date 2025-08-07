@@ -15,14 +15,12 @@ import { UploadedFileService } from './services/uploaded-file.service'
         MongooseModule.forRootAsync({
             useFactory: (configService: ConfigService) => {
 
-                const username = configService.get<string>('MONGO_INITDB_ROOT_USERNAME')!
-                const password = configService.get<string>('MONGO_INITDB_ROOT_PASSWORD')!
-                const host = configService.get<string>('MONGO_HOST')!
-                const port = configService.get<number>('MONGODB_PORT_EXTERNAL')!
+                const host = configService.get<string>('MONGODB_HOST')!
+                const port = configService.get<number>('MONGODB_PORT')!
 
-                const uri = `mongodb://${username}:${password}@${host}:${port}`
+                const uri = `mongodb://${host}:${port}`
                 return {
-                    uri: `mongodb://localhost:27017`,
+                    uri,
                     autoIndex: configService.get<string>('APP_MODE') === 'development',
                 }
             },
